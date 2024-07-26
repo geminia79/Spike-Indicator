@@ -1,0 +1,29 @@
+//@version=5
+indicator("Unusual Spike Detector", overlay=true)
+
+// Input parameters
+length = input.int(100, title="Lookback Period")
+threshold = input.float(3.5, title="Spike Threshold (%)", minval=0.1, step=0.1)
+
+// Calculate the percentage change for the current candle
+percent_change = (close - open) / open * 100
+
+// Calculate the percentage change for each candle in the lookback period
+var float[] changes = na
+if (na(changes))
+    changes := array.new_float(length)
+
+for i = 0 to length - 1
+    array.set(changes, i, (close[i] - open[i]) / open[i] * 100)
+
+// Calculate the mean and standard deviation of the changes
+mean = array.avg(changes)
+stdev = array.stdev(changes)
+
+// Determine if the current candle has an unusual spike
+spike_up = percent_change > mean + threshold
+spike_down = percent_change < mean - threshold
+
+// Plot arrows on the chart
+plotshape(series=spike_up, title="Spike Up", location=location.belowbar, color=color.green, style=shape.labelup, text="Up", size=size.small)
+plotshape(series=spike_down, title="Spike Down", location=location.abovebar, color=color.red, style=shape.labeldown, text="Down", size=size.small)
